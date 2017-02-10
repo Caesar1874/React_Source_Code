@@ -31,6 +31,7 @@ var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
  *
  * See https://github.com/spicyj/innerhtml-vs-createelement-vs-clonenode.
  */
+// 针对 edge
 var enableLazy = (
   typeof document !== 'undefined' &&
   typeof document.documentMode === 'number'

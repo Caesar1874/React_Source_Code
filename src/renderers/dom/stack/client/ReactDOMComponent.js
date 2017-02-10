@@ -698,18 +698,23 @@ ReactDOMComponent.Mixin = {
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
+      // 跳过继承属性
       if (!props.hasOwnProperty(propKey)) {
         continue;
       }
+      // 跳过值为 null 的属性
       var propValue = props[propKey];
       if (propValue == null) {
         continue;
       }
+
       if (registrationNameModules.hasOwnProperty(propKey)) {
+        // 针对当前节点添加事件代理
         if (propValue) {
           ensureListeningTo(this, propKey, transaction);
         }
       } else {
+        // 合并样式
         if (propKey === STYLE) {
           if (propValue) {
             if (__DEV__) {
@@ -718,6 +723,8 @@ ReactDOMComponent.Mixin = {
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
+
+        // 创建属性标识
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (!RESERVED_PROPS.hasOwnProperty(propKey)) {

@@ -114,7 +114,9 @@ function defineRefPropWarningGetter(props, displayName) {
  * @param {*} props
  * @internal
  */
+// ReactElement： virtual DOM， ReactNode
 var ReactElement = function(type, key, ref, self, source, owner, props) {
+  // 该函数创建了 element 并返回
   var element = {
     // This tag allow us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -180,7 +182,9 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://facebook.github.io/react/docs/react-api.html#createelement
  */
+// 对参数进行处理，并返回ReactElement 实例
 ReactElement.createElement = function(type, config, children) {
+  // 初始化参数
   var propName;
 
   // Reserved names are extracted
@@ -191,6 +195,7 @@ ReactElement.createElement = function(type, config, children) {
   var self = null;
   var source = null;
 
+  // 抽取config中的内容到ref, key, self, source 和 props
   if (config != null) {
     if (hasValidRef(config)) {
       ref = config.ref;
@@ -201,6 +206,7 @@ ReactElement.createElement = function(type, config, children) {
 
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
+    // 将属性复制到props对象
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (hasOwnProperty.call(config, propName) &&
@@ -212,6 +218,7 @@ ReactElement.createElement = function(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
+  // 将所有的children参数 挂载到 props.chidren, 有多个children 参数时处理为数组
   var childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
@@ -229,6 +236,7 @@ ReactElement.createElement = function(type, config, children) {
   }
 
   // Resolve default props
+  // 如果props 上存在值undefined属性，则将 对应的 defaultProps 属性赋值过去
   if (type && type.defaultProps) {
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
@@ -253,6 +261,8 @@ ReactElement.createElement = function(type, config, children) {
       }
     }
   }
+
+  // type 参数不作处理
   return ReactElement(
     type,
     key,

@@ -20,7 +20,7 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function(element) {
+var ReactCompositeComponentWrapper = function (element) {
   this.construct(element);
 };
 
@@ -58,13 +58,27 @@ function isInternalComponentType(type) {
  * @return {object} A new instance of the element's constructor.
  * @protected
  */
+/*
+ * 初始化组件的入口函数，根据不同的ReaxtNode 初始化对应类型的组件
+ * node 不存在，初始化空组件
+ * node 为对象时表示 DOM组件 或 自定义组件
+ * node.type 为 string, 初始化 DOM组件( internalComponent)
+ * node.type 为 function 而且满足isInternalComponentType，不能处理 TODO： 非字符串表示的自定义组件
+ * node.type 为 function 的其他情况： 初始化 自定义组件(compositeConponent)
+ * node 为 string 或 number, 初始化 文本组件( textComponent)
+ *  */
+
 function instantiateReactComponent(node, shouldHaveDebugID) {
   var instance;
 
+  // node 不存在
   if (node === null || node === false) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
+    // node 为对象
     var element = node;
+
+    // node.type 应为 function 或 string, 否则报错
     var type = element.type;
     if (
       typeof type !== 'function' &&
@@ -95,8 +109,10 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
 
     // Special case string values
     if (typeof element.type === 'string') {
+      // node.type 为 string
       instance = ReactHostComponent.createInternalComponent(element);
     } else if (isInternalComponentType(element.type)) {
+      // node.type 为 function 满足isInternalComponentType
       // This is temporarily available for custom components that are not string
       // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
@@ -107,6 +123,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
         instance.getHostNode = instance.getNativeNode;
       }
     } else {
+      // node.type 为 function
       instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
