@@ -380,6 +380,7 @@ var ReactMount = {
     );
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
+
     var componentInstance = instantiateReactComponent(nextElement, false);
 
     if (callback) {
@@ -434,6 +435,8 @@ var ReactMount = {
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     validateCallback(callback, 'ReactDOM.render');
+
+    // 类型检验和警告信息
     if (!React.isValidElement(nextElement)) {
       if (typeof nextElement === 'string') {
         invariant(
@@ -474,11 +477,12 @@ var ReactMount = {
       'reconciliation issues. Try rendering into a container element created ' +
       'for your app.'
     );
-
+    // 创建React element
     var nextWrappedElement = React.createElement(
       TopLevelWrapper,
       { child: nextElement }
     );
+    console.log("mount nextWrappedElement", nextWrappedElement);
 
     var nextContext = getContextForSubtree(parentComponent);
     var prevComponent = getTopLevelWrapperInContainer(container);
@@ -539,6 +543,8 @@ var ReactMount = {
       containerHasReactMarkup &&
       !prevComponent &&
       !containerHasNonRootReactChild;
+
+    // 渲染
     var component = ReactMount._renderNewRootComponent(
       nextWrappedElement,
       container,
@@ -546,6 +552,9 @@ var ReactMount = {
       nextContext,
       callback
     )._renderedComponent.getPublicInstance();
+
+    console.log("mount return component", component);
+    // 返回已经在容器中渲染的 React component 实例
     return component;
   },
 
@@ -564,6 +573,7 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   render: function(nextElement, container, callback) {
+    console.log("Mount nextElement", nextElement);
     return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
   },
 

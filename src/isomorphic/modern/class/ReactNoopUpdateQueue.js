@@ -30,6 +30,7 @@ function warnNoop(publicInstance, callerName) {
 
 /**
  * This is the abstract API for an update queue.
+ * 抽象API 没有实际定义？
  */
 var ReactNoopUpdateQueue = {
 

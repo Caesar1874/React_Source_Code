@@ -37,7 +37,9 @@ import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 function StatelessComponent(Component) {
 }
+// 无状态组件只有一个渲染函数
 StatelessComponent.prototype.render = function() {
+  // 这里的this是什么，即谁调用render
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
   return element;
@@ -101,6 +103,7 @@ function measureLifeCyclePerf(fn, debugID, timerType) {
  *
  * @private
  */
+// 组件挂载时分配编号，用于ReactUpdates 时 确保组件的顺序；
 var nextMountID = 1;
 
 /**
@@ -158,12 +161,14 @@ var ReactCompositeComponent = {
    * @final
    * @internal
    */
+  // 初始化组件，渲染标记，注册事件监听器
   mountComponent: function(
     transaction,
     hostParent,
     hostContainerInfo,
     context
   ) {
+    // 当前元素对应的上下文
     this._context = context;
     this._mountOrder = nextMountID++;
     this._hostParent = hostParent;
@@ -178,6 +183,7 @@ var ReactCompositeComponent = {
 
     // Initialize the public class
     var doConstruct = shouldConstruct(Component);
+    // 初始化公共类
     var inst = this._constructComponent(
       doConstruct,
       publicProps,
@@ -187,6 +193,7 @@ var ReactCompositeComponent = {
     var renderedElement;
 
     // Support functional components
+    // 初始化函数组件（无状态组件）， 没有更新队列，专注于渲染
     if (!doConstruct && (inst == null || inst.render == null)) {
       renderedElement = inst;
       if (__DEV__) {
@@ -306,6 +313,7 @@ var ReactCompositeComponent = {
       );
     }
 
+    // 1. 初始化 state
     var initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
@@ -316,10 +324,12 @@ var ReactCompositeComponent = {
       this.getName() || 'ReactCompositeComponent'
     );
 
+    // 初始化更新队列
     this._pendingStateQueue = null;
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    // 2. componentWillMount
     if (inst.componentWillMount) {
       if (__DEV__) {
         measureLifeCyclePerf(
@@ -338,7 +348,9 @@ var ReactCompositeComponent = {
     }
 
     var markup;
+
     if (inst.unstable_handleError) {
+      // 挂载时出现错误
       markup = this.performInitialMountWithErrorHandling(
         renderedElement,
         hostParent,
@@ -347,6 +359,8 @@ var ReactCompositeComponent = {
         context
       );
     } else {
+      // 3. 初始化挂载
+      // markup = inst.render();
       markup = this.performInitialMount(
         renderedElement,
         hostParent,
@@ -356,6 +370,7 @@ var ReactCompositeComponent = {
       );
     }
 
+    // 4. componentDidMount
     if (inst.componentDidMount) {
       if (__DEV__) {
         transaction.getReactMountReady().enqueue(() => {
@@ -551,7 +566,7 @@ var ReactCompositeComponent = {
     }
 
     var inst = this._instance;
-
+    // 存在componentWillUnmount 则调用
     if (inst.componentWillUnmount && !inst._calledComponentWillUnmount) {
       inst._calledComponentWillUnmount = true;
 
@@ -573,6 +588,7 @@ var ReactCompositeComponent = {
       }
     }
 
+    // 组件已经渲染，则进行unmountComponent
     if (this._renderedComponent) {
       ReactReconciler.unmountComponent(
         this._renderedComponent,
@@ -584,6 +600,7 @@ var ReactCompositeComponent = {
       this._instance = null;
     }
 
+    // 重置相关参数， 更新队列，更新状态
     // Reset pending fields
     // Even if this component is scheduled for another update in ReactUpdates,
     // it would still be ignored because these fields are reset.
@@ -599,6 +616,7 @@ var ReactCompositeComponent = {
     this._rootNodeID = 0;
     this._topLevelWrapper = null;
 
+    // 清除公共类
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
     // leaks a reference to the public instance.
@@ -702,7 +720,7 @@ var ReactCompositeComponent = {
     } else {
       if (__DEV__) {
         const componentName = this.getName();
-        
+
         if (!warningAboutMissingGetChildContext[componentName]) {
           warningAboutMissingGetChildContext[componentName] = true;
           warning(
@@ -849,6 +867,7 @@ var ReactCompositeComponent = {
     // An update here will schedule an update but immediately set
     // _pendingStateQueue which will ensure that any state updates gets
     // immediately reconciled instead of waiting for the next batch.
+    // 1. 如果存在componentWillReceiveProps则调用
     if (willReceive && inst.componentWillReceiveProps) {
       if (__DEV__) {
         measureLifeCyclePerf(
@@ -865,8 +884,10 @@ var ReactCompositeComponent = {
     // callbacks until the next render happens, so stash the callbacks first.
     var callbacks = this._pendingCallbacks;
     this._pendingCallbacks = null;
-
+    // 将新state合并到更新队列，此时nextState 是最新的state
     var nextState = this._processPendingState(nextProps, nextContext);
+
+    // 根据更新队列和shwComponentUpdate 的状态判断是否需要更新组件
     var shouldUpdate = true;
     if (!this._pendingForceUpdate) {
       var prevState = inst.state;
@@ -901,6 +922,7 @@ var ReactCompositeComponent = {
 
     this._updateBatchNumber = null;
     if (shouldUpdate) {
+      // 重置更新队列
       this._pendingForceUpdate = false;
       // Will set `this.props`, `this.state` and `this.context`.
       this._performComponentUpdate(
@@ -992,6 +1014,7 @@ var ReactCompositeComponent = {
     var prevProps;
     var prevState;
     var prevContext;
+    // 如果存在componentDidUpdate, 则保存props, state, context
     if (hasComponentDidUpdate) {
       prevProps = inst.props;
       prevState = inst.state;
@@ -1012,10 +1035,13 @@ var ReactCompositeComponent = {
 
     this._currentElement = nextElement;
     this._context = unmaskedContext;
+
+    // 更新props, state, context
     inst.props = nextProps;
     inst.state = nextState;
     inst.context = nextContext;
 
+    // 调用render 渲染组件
     if (inst.unstable_handleError) {
       this._updateRenderedComponentWithErrorHandling(transaction, unmaskedContext);
     } else {
@@ -1301,8 +1327,10 @@ var ReactCompositeComponent = {
   },
 
   // Stub
+  // 其值就是instantiateReactComponent()方法， 见对应的文件
   _instantiateReactComponent: null,
 
 };
 
 module.exports = ReactCompositeComponent;
+

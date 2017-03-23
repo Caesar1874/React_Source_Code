@@ -54,14 +54,19 @@ var ReactDefaultBatchingStrategy = {
    * and friends are batched such that components aren't updated unnecessarily.
    */
   batchedUpdates: function(callback, a, b, c, d, e) {
+    // 初始值是非批量更新
     var alreadyBatchingUpdates = ReactDefaultBatchingStrategy.isBatchingUpdates;
 
+    // 将 isBatchingUpdates 设置为true
     ReactDefaultBatchingStrategy.isBatchingUpdates = true;
 
     // The code is written this way to avoid extra allocations
+
     if (alreadyBatchingUpdates) {
+      // 如果已经处于批量更新
       return callback(a, b, c, d, e);
     } else {
+      // 非批量更新
       return transaction.perform(callback, null, a, b, c, d, e);
     }
   },

@@ -47,13 +47,17 @@ function insertTreeChildren(tree) {
   }
   var node = tree.node;
   var children = tree.children;
+
   if (children.length) {
+    // 包含子元素，子元素进行遍历
     for (var i = 0; i < children.length; i++) {
       insertTreeBefore(node, children[i], null);
     }
   } else if (tree.html != null) {
+    // 没有子元素，设置HTML
     setInnerHTML(node, tree.html);
   } else if (tree.text != null) {
+    // 没有子元素设置text
     setTextContent(node, tree.text);
   }
 }
@@ -72,7 +76,9 @@ var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
         tree.node.nodeName.toLowerCase() === 'object' &&
         (tree.node.namespaceURI == null ||
          tree.node.namespaceURI === DOMNamespaces.html)) {
+      // 首先将 tree 构建为 DocumentFragment
       insertTreeChildren(tree);
+      // 将 tree 插入到指定节点
       parentNode.insertBefore(tree.node, referenceNode);
     } else {
       parentNode.insertBefore(tree.node, referenceNode);
@@ -82,7 +88,9 @@ var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
 );
 
 function replaceChildWithTree(oldNode, newTree) {
+  // 用tree 替换旧节点
   oldNode.parentNode.replaceChild(newTree.node, oldNode);
+  // 构建tree
   insertTreeChildren(newTree);
 }
 
@@ -90,6 +98,7 @@ function queueChild(parentTree, childTree) {
   if (enableLazy) {
     parentTree.children.push(childTree);
   } else {
+    // 将tree 追加到指定 tree
     parentTree.node.appendChild(childTree.node);
   }
 }

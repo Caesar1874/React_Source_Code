@@ -114,7 +114,7 @@ function defineRefPropWarningGetter(props, displayName) {
  * @param {*} props
  * @internal
  */
-// ReactElement： virtual DOM， ReactNode
+// ReactElement
 var ReactElement = function(type, key, ref, self, source, owner, props) {
   // 该函数创建了 element 并返回
   var element = {
@@ -262,7 +262,7 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
-  // type 参数不作处理
+
   return ReactElement(
     type,
     key,

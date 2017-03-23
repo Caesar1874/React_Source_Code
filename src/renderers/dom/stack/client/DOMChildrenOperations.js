@@ -38,7 +38,8 @@ function getNodeAfter(parentNode, node) {
  * @internal
  */
 var insertChildAt = createMicrosoftUnsafeLocalFunction(
-  function(parentNode, childNode, referenceNode) {
+  //
+  function (parentNode, childNode, referenceNode) {
     // We rely exclusively on `insertBefore(node, null)` instead of also using
     // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
     // we are careful to use `null`.)
@@ -68,12 +69,11 @@ function removeChild(parentNode, childNode) {
   parentNode.removeChild(childNode);
 }
 
-function moveDelimitedText(
-  parentNode,
-  openingComment,
-  closingComment,
-  referenceNode
-) {
+// 遍历插入子节点
+function moveDelimitedText(parentNode,
+                           openingComment,
+                           closingComment,
+                           referenceNode) {
   var node = openingComment;
   while (true) {
     var nextNode = node.nextSibling;
@@ -85,6 +85,7 @@ function moveDelimitedText(
   }
 }
 
+// 遍历移除子节点，起止点分别是startNode, closingComment, 不包括两者
 function removeDelimitedText(parentNode, startNode, closingComment) {
   while (true) {
     var node = startNode.nextSibling;
@@ -97,12 +98,17 @@ function removeDelimitedText(parentNode, startNode, closingComment) {
   }
 }
 
+// DOMChildrenOperations 的方法
 function replaceDelimitedText(openingComment, closingComment, stringText) {
+  // comment 是指什么
+
   var parentNode = openingComment.parentNode;
   var nodeAfterComment = openingComment.nextSibling;
+
   if (nodeAfterComment === closingComment) {
     // There are no text nodes between the opening and closing comments; insert
     // a new one if stringText isn't empty.
+    // 在opening 与 closing 之间没有文本节点，如果传递了文本参数，则将其作为文本节点插入
     if (stringText) {
       insertChildAt(
         parentNode,
@@ -111,12 +117,16 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
       );
     }
   } else {
+    // opening 与 closing 之间有文本节点，
     if (stringText) {
       // Set the text content of the first node after the opening comment, and
       // remove all following nodes up until the closing comment.
+      // 如果传入了文本参数，将其插入 opening 后的第一个节点
       setTextContent(nodeAfterComment, stringText);
+      // 移除 opening 后的第一个节点 与 closing 之间的所有节点
       removeDelimitedText(parentNode, nodeAfterComment, closingComment);
     } else {
+      // 如果没有传入文本参数， 移除opening 与 closing 之间的所有节点
       removeDelimitedText(parentNode, openingComment, closingComment);
     }
   }
@@ -132,7 +142,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
 
 var dangerouslyReplaceNodeWithMarkup = Danger.dangerouslyReplaceNodeWithMarkup;
 if (__DEV__) {
-  dangerouslyReplaceNodeWithMarkup = function(oldChild, markup, prevInstance) {
+  dangerouslyReplaceNodeWithMarkup = function (oldChild, markup, prevInstance) {
     Danger.dangerouslyReplaceNodeWithMarkup(oldChild, markup);
     if (prevInstance._debugID !== 0) {
       ReactInstrumentation.debugTool.onHostOperation({
@@ -169,16 +179,25 @@ var DOMChildrenOperations = {
    * @param {array<object>} updates List of update configurations.
    * @internal
    */
-  processUpdates: function(parentNode, updates) {
+  processUpdates: function (parentNode, updates) {
+
     if (__DEV__) {
       var parentNodeDebugID =
         ReactDOMComponentTree.getInstanceFromNode(parentNode)._debugID;
     }
 
+    // todo: updates 表示要处理的更新的对象，具体内容待确定
+    /*update = {
+      type: ,
+      content: ,
+      fromNode,
+    }*/
+    // 更新的类型： 插入节点， 移动节点， 移除节点
     for (var k = 0; k < updates.length; k++) {
       var update = updates[k];
       switch (update.type) {
         case 'INSERT_MARKUP':
+          // 插入 tree
           insertLazyTreeChildAt(
             parentNode,
             update.content,
@@ -193,6 +212,7 @@ var DOMChildrenOperations = {
           }
           break;
         case 'MOVE_EXISTING':
+          // 移动 节点
           moveChild(
             parentNode,
             update.fromNode,
@@ -233,6 +253,7 @@ var DOMChildrenOperations = {
           }
           break;
         case 'REMOVE_NODE':
+          // 移除 节点
           removeChild(parentNode, update.fromNode);
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation({

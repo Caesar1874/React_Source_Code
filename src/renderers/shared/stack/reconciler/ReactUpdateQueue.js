@@ -188,8 +188,8 @@ var ReactUpdateQueue = {
   /**
    * Sets a subset of the state. This only exists because _pendingState is
    * internal. This provides a merging strategy that is not available to deep
-   * properties which is confusing. TODO: Expose pendingState or don't use it
-   * during the merge.
+   * properties which is confusing.
+   * TODO: Expose pendingState or don't use it during the merge.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} partialState Next partial state to be merged with state.
@@ -217,8 +217,8 @@ var ReactUpdateQueue = {
     }
 
     var queue =
-      internalInstance._pendingStateQueue ||
-      (internalInstance._pendingStateQueue = []);
+      internalInstance._pendingStateQueue || (internalInstance._pendingStateQueue = []);
+
     queue.push(partialState);
 
     if (callback) {

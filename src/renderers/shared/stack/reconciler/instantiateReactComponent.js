@@ -21,6 +21,7 @@ var warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
 var ReactCompositeComponentWrapper = function (element) {
+  // ???????????? what?
   this.construct(element);
 };
 
@@ -167,6 +168,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
   return instance;
 }
 
+// 这一段代码关联了三个模块： ReactCompositeComponent，instantiateReactComponent，后者关联了ReactMount
 Object.assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent,

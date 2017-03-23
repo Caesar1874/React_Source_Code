@@ -179,16 +179,20 @@ function enqueueUpdate(component) {
 
   // Various parts of our code (such as ReactCompositeComponent's
   // _renderValidatedComponent) assume that calls to render aren't nested;
-  // verify that that's the case. (This is called by each top-level update
-  // function, like setState, forceUpdate, etc.; creation and
-  // destruction of top-level components is guarded in ReactMount.)
+  // verify that that's the case.
+  // (This is called by each top-level update function, like setState, forceUpdate, etc.;
+  // creation and destruction of top-level components is guarded in ReactMount.)
 
+  // 非批量更新模式
   if (!batchingStrategy.isBatchingUpdates) {
+    // batchedUpdates 实际上递归的调用enqueueUpdate
     batchingStrategy.batchedUpdates(enqueueUpdate, component);
     return;
   }
 
+  // 批量更新模式，将组件放入dirtyComponent数组
   dirtyComponents.push(component);
+
   if (component._updateBatchNumber == null) {
     component._updateBatchNumber = updateBatchNumber + 1;
   }

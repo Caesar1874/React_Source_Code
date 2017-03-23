@@ -20,6 +20,7 @@ var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
 
+// 构造函数
 var ReactComponent = ReactBaseClasses.Component;
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
@@ -70,7 +71,7 @@ type SpecPolicy =
  *       return <div>Hello World</div>;
  *     }
  *   });
- *
+ *`
  * The class specification supports a specific protocol of methods that have
  * special meaning (e.g. `render`). See `ReactClassInterface` for
  * more the comprehensive protocol. Any other properties and methods in the
@@ -744,6 +745,7 @@ var ReactClassMixin = {
 };
 
 var ReactClassComponent = function() {};
+
 Object.assign(
   ReactClassComponent.prototype,
   ReactComponent.prototype,
@@ -769,6 +771,7 @@ var ReactClass = {
     // To keep our warnings more understandable, we'll use a little hack here to
     // ensure that Constructor.name !== 'Constructor'. This makes sure we don't
     // unnecessarily identify a class without displayName as 'Constructor'.
+
     var Constructor = identity(function(props, context, updater) {
       // This constructor gets overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
@@ -782,6 +785,7 @@ var ReactClass = {
       }
 
       // Wire up auto-binding
+      // 将方法绑定到组件
       if (this.__reactAutoBindPairs.length) {
         bindAutoBindMethods(this);
       }
@@ -797,6 +801,7 @@ var ReactClass = {
       // getInitialState and componentWillMount methods for initialization.
 
       var initialState = this.getInitialState ? this.getInitialState() : null;
+
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
         if (initialState === undefined &&
@@ -814,10 +819,15 @@ var ReactClass = {
 
       this.state = initialState;
     });
+
+    // 原型
     Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
+
+    // ?
     Constructor.prototype.__reactAutoBindPairs = [];
 
+    // 将spec对象的属性添加到 Constructor 的静态属性
     mixSpecIntoComponent(Constructor, spec);
 
     // Initialize the defaultProps property after all mixins have been merged.
@@ -866,7 +876,10 @@ var ReactClass = {
         Constructor.prototype[methodName] = null;
       }
     }
-
+    console.log("Constructor Start", Constructor);
+    console.log("default", Constructor.getDefaultProps);
+    console.log("propTypes", Constructor.propTypes);
+    console.log("Constructor End");
     return Constructor;
   },
 

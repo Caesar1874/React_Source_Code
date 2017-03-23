@@ -20,7 +20,8 @@
 
 // TODO: Replace this with ES6: var ReactInstanceMap = new Map();
 var ReactInstanceMap = {
-
+  // // 这里的key是 publicInstance ReactClass
+  // _reactInternalInstance 是什么
   /**
    * This API should be called `delete` but we'd have to make sure to always
    * transform these to strings for IE support. When this transform is fully

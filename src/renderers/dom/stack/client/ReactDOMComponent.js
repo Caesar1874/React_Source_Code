@@ -111,8 +111,7 @@ function assertValidProps(component, props) {
       'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
     );
     warning(
-      props.suppressContentEditableWarning ||
-      !props.contentEditable ||
+      props.suppressContentEditableWarning || !props.contentEditable ||
       props.children == null,
       'A component is `contentEditable` and contains `children` managed by ' +
       'React. It is now your responsibility to guarantee that none of ' +
@@ -132,7 +131,7 @@ function assertValidProps(component, props) {
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
     'using JSX.%s',
-     getDeclarationErrorAddendum(component)
+    getDeclarationErrorAddendum(component)
   );
 }
 
@@ -171,7 +170,7 @@ function optionPostMount() {
 
 var setAndValidateContentChildDev = emptyFunction;
 if (__DEV__) {
-  setAndValidateContentChildDev = function(content) {
+  setAndValidateContentChildDev = function (content) {
     var hasExistingContent = this._contentDebugID != null;
     var debugID = this._debugID;
     // This ID represents the inlined child that has no backing instance:
@@ -452,12 +451,10 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    * @return {string} The computed markup.
    */
-  mountComponent: function(
-    transaction,
-    hostParent,
-    hostContainerInfo,
-    context
-  ) {
+  mountComponent: function (transaction,
+                            hostParent,
+                            hostContainerInfo,
+                            context) {
     this._rootNodeID = globalIdCounter++;
     this._domID = hostContainerInfo._idCounter++;
     this._hostParent = hostParent;
@@ -465,6 +462,7 @@ ReactDOMComponent.Mixin = {
 
     var props = this._currentElement.props;
 
+    // 事件
     switch (this._tag) {
       case 'audio':
       case 'form':
@@ -526,7 +524,7 @@ ReactDOMComponent.Mixin = {
       parentTag = hostContainerInfo._tag;
     }
     if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
+      namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
@@ -694,7 +692,8 @@ ReactDOMComponent.Mixin = {
    * @param {object} props
    * @return {string} Markup of opening tag.
    */
-  _createOpenTagMarkupAndPutListeners: function(transaction, props) {
+  // 生成标记和标签，处理节点的属性和事件
+  _createOpenTagMarkupAndPutListeners: function (transaction, props) {
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
@@ -761,9 +760,11 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    * @return {string} Content markup.
    */
-  _createContentMarkup: function(transaction, props, context) {
+  // 更新子节点
+  _createContentMarkup: function (transaction, props, context) {
     var ret = '';
 
+    // 获取子节点渲染出的内容
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
@@ -781,6 +782,7 @@ ReactDOMComponent.Mixin = {
           setAndValidateContentChildDev.call(this, contentToUse);
         }
       } else if (childrenToUse != null) {
+        // 对子节点进行初始化渲染
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
@@ -789,6 +791,7 @@ ReactDOMComponent.Mixin = {
         ret = mountImages.join('');
       }
     }
+    // 是否需要换行
     if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
       // text/html ignores the first character in these tags if it's a newline
       // Prefer to break application/xml over text/html (for now) by adding
@@ -806,7 +809,7 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  _createInitialChildren: function(transaction, props, context, lazyTree) {
+  _createInitialChildren: function (transaction, props, context, lazyTree) {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
@@ -851,11 +854,13 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    */
-  receiveComponent: function(nextElement, transaction, context) {
+  receiveComponent: function (nextElement, transaction, context) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
+    // 更新节点属性
     this.updateComponent(transaction, prevElement, nextElement, context);
   },
+
 
   /**
    * Updates a DOM component after it has already been allocated and
@@ -867,7 +872,8 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @overridable
    */
-  updateComponent: function(transaction, prevElement, nextElement, context) {
+  // 更新节点属性
+  updateComponent: function (transaction, prevElement, nextElement, context) {
     var lastProps = prevElement.props;
     var nextProps = this._currentElement.props;
 
@@ -890,7 +896,7 @@ ReactDOMComponent.Mixin = {
         break;
       default:
         if (typeof lastProps.onClick !== 'function' &&
-            typeof nextProps.onClick === 'function') {
+          typeof nextProps.onClick === 'function') {
           transaction.getReactMountReady().enqueue(
             trapClickOnNonInteractiveElement,
             this
@@ -901,6 +907,7 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, nextProps);
     var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
+    // 重点
     this._updateDOMProperties(lastProps, nextProps, transaction, isCustomComponentTag);
     this._updateDOMChildren(
       lastProps,
@@ -943,24 +950,24 @@ ReactDOMComponent.Mixin = {
    * @param {object} nextProps
    * @param {?DOMElement} node
    */
-  _updateDOMProperties: function(
-    lastProps,
-    nextProps,
-    transaction,
-    isCustomComponentTag
-  ) {
+  _updateDOMProperties: function (lastProps,
+                                  nextProps,
+                                  transaction,
+                                  isCustomComponentTag) {
     var propKey;
     var styleName;
     var styleUpdates;
+    // 如果旧属性不在新属性集合中，需要删除
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey) ||
-         lastProps[propKey] == null) {
+      if (nextProps.hasOwnProperty(propKey) || !lastProps.hasOwnProperty(propKey) ||
+        lastProps[propKey] == null) {
         continue;
       }
+      // 如果是样式属性style
       if (propKey === STYLE) {
         var lastStyle = lastProps[STYLE];
         for (styleName in lastStyle) {
+          // 删除不需要的样式 ？
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
@@ -969,6 +976,7 @@ ReactDOMComponent.Mixin = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
+        // 从DOM上删除不需要的属性
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
             getNode(this),
@@ -976,19 +984,24 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
+
+    // 新的属性写到DOM节点上
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps != null ? lastProps[propKey] : undefined;
+      // 不在新属性中，或与旧属性相同，则跳过
       if (!nextProps.hasOwnProperty(propKey) ||
-          nextProp === lastProp ||
-          nextProp == null && lastProp == null) {
+        nextProp === lastProp ||
+        nextProp == null && lastProp == null) {
         continue;
       }
+
+      // 更新样式
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
@@ -997,29 +1010,34 @@ ReactDOMComponent.Mixin = {
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
+          // 清除在旧样式但不在新样式中的样式
           for (styleName in lastProp) {
             if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+              (!nextProp || !nextProp.hasOwnProperty(styleName))) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
           }
           // Update styles that changed since `lastProp`.
+          // 在旧样式也在新样式中， 且不相同，更新
           for (styleName in nextProp) {
             if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
+              lastProp[styleName] !== nextProp[styleName]) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
             }
           }
         } else {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          // 不在旧样式，但在新样式中， 直接写入新样式
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
+          // 添加事件监听的属性
           ensureListeningTo(this, propKey, transaction);
         }
+      //  添加新属性， 或者更新旧的同名属性
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
@@ -1029,8 +1047,8 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
@@ -1038,10 +1056,12 @@ ReactDOMComponent.Mixin = {
         if (nextProp != null) {
           DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
         } else {
+          // 如果更新为null 或 undefined, 删除属性
           DOMPropertyOperations.deleteValueForProperty(node, propKey);
         }
       }
     }
+    // 如果styleUpdates 补位空，则设置新样式
     if (styleUpdates) {
       if (__DEV__) {
         ReactInstrumentation.debugTool.onHostOperation({
@@ -1067,7 +1087,8 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    */
-  _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
+  // 更新子节点
+  _updateDOMChildren: function (lastProps, nextProps, transaction, context) {
     var lastContent =
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var nextContent =
@@ -1120,7 +1141,7 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  getHostNode: function() {
+  getHostNode: function () {
     return getNode(this);
   },
 
@@ -1130,7 +1151,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function(safely, skipLifecycle) {
+  unmountComponent: function (safely, skipLifecycle) {
     switch (this._tag) {
       case 'audio':
       case 'form':
@@ -1183,7 +1204,7 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  restoreControlledState: function() {
+  restoreControlledState: function () {
     switch (this._tag) {
       case 'input':
         ReactDOMInput.restoreControlledState(this);
@@ -1197,7 +1218,7 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  getPublicInstance: function() {
+  getPublicInstance: function () {
     return getNode(this);
   },
 

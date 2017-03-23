@@ -50,7 +50,8 @@ var ReactDOMTextComponent = function(text) {
   this._commentNodes = null;
 };
 
-Object.assign(ReactDOMTextComponent.prototype, {
+Object.assign(
+  ReactDOMTextComponent.prototype, {
 
   /**
    * Creates the markup for this text node. This node is not intended to have
